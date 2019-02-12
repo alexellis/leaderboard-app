@@ -2,8 +2,8 @@ package function
 
 import (
 	"database/sql"
-	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 
@@ -41,6 +41,9 @@ func init() {
 func Handle(w http.ResponseWriter, r *http.Request) {
 	var input []byte
 
+	webhookSecret, _ := sdk.ReadSecret("webhook-secret")
+	log.Printf("Webhook secret: %d", len(webhookSecret))
+
 	if r.Body != nil {
 		defer r.Body.Close()
 
@@ -49,6 +52,13 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		input = body
 	}
 
+	err := db.Ping()
+	if err != nil {
+		w.WriteHeader(http.StatusOK)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("Hello world, input was: %s", string(input))))
+	w.Write([]byte("Ping OK"))
 }
