@@ -10,6 +10,22 @@
   version = "1.2"
 
 [[projects]]
+  digest = "1:ff98bd3732a981a61d88dce04d0ab8e05e5ad46fe67cbc2e107fcb8250ba68f1"
+  name = "github.com/google/go-github"
+  packages = ["github"]
+  pruneopts = "UT"
+  revision = "1c3f0aaee1ce742b655f1ba8f33740103e904c5c"
+  version = "v24.0.0"
+
+[[projects]]
+  digest = "1:a63cff6b5d8b95638bfe300385d93b2a6d9d687734b863da8e09dc834510a690"
+  name = "github.com/google/go-querystring"
+  packages = ["query"]
+  pruneopts = "UT"
+  revision = "44c6ddd0a2342c386950e880b658017258da92fc"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:8ef506fc2bb9ced9b151dafa592d4046063d744c646c1bbe801982ce87e4bc24"
   name = "github.com/lib/pq"
   packages = [
@@ -40,6 +56,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/google/go-github/github",
     "github.com/lib/pq",
     "github.com/openfaas/openfaas-cloud/sdk",
   ]

@@ -6,8 +6,13 @@ functions:
     lang: golang-middleware
     handler: ./leaderboard
     image: leaderboard:latest
+    environment:
+      postgres_db: defaultdb
+      postgres_sslmode: require
+      postgres_port: 25060
     secrets:
       - leaderboard-app-secrets
+
   github-sub:
     lang: golang-middleware
     handler: ./github-sub

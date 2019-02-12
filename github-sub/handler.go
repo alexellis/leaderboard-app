@@ -2,10 +2,12 @@ package function
 
 import (
 	"database/sql"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/google/go-github/github"
 	_ "github.com/lib/pq"
 
 	"github.com/openfaas/openfaas-cloud/sdk"
@@ -38,26 +40,44 @@ func init() {
 }
 
 func Handle(w http.ResponseWriter, r *http.Request) {
-	// var input []byte
 
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
+
+	webhookType := github.WebHookType(r)
 	webhookSecret, _ := sdk.ReadSecret("webhook-secret")
 	log.Printf("Webhook secret: %d", len(webhookSecret))
 
-	// if r.Body != nil {
-	// 	defer r.Body.Close()
+	body, _ := ioutil.ReadAll(r.Body)
+	event, err := github.ParseWebHook(webhookType, body)
 
-	// 	body, _ := ioutil.ReadAll(r.Body)
-
-	// 	input = body
-	// }
-
-	err := db.Ping()
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	msg := ""
+	if issueEvent, ok := event.(*github.IssuesEvent); ok {
+		switch *issueEvent.Action {
+		case "opened":
+			msg = " (issue opened) by " + issueEvent.Sender.GetLogin()
+		}
+	}
+
+	if issueCommentEvent, ok := event.(*github.IssueCommentEvent); ok {
+		switch *issueCommentEvent.Action {
+		case "created":
+			msg = " (comment created) by " + issueCommentEvent.Sender.GetLogin()
+		}
+	}
+
+	dbErr := db.Ping()
+	if dbErr != nil {
 		w.WriteHeader(http.StatusOK)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, dbErr.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Ping OK"))
+	w.Write([]byte("Ping OK" + msg))
 }
