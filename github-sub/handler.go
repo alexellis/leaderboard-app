@@ -2,7 +2,6 @@ package function
 
 import (
 	"database/sql"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -39,18 +38,18 @@ func init() {
 }
 
 func Handle(w http.ResponseWriter, r *http.Request) {
-	var input []byte
+	// var input []byte
 
 	webhookSecret, _ := sdk.ReadSecret("webhook-secret")
 	log.Printf("Webhook secret: %d", len(webhookSecret))
 
-	if r.Body != nil {
-		defer r.Body.Close()
+	// if r.Body != nil {
+	// 	defer r.Body.Close()
 
-		body, _ := ioutil.ReadAll(r.Body)
+	// 	body, _ := ioutil.ReadAll(r.Body)
 
-		input = body
-	}
+	// 	input = body
+	// }
 
 	err := db.Ping()
 	if err != nil {
