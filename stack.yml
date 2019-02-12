@@ -1,0 +1,12 @@
+provider:
+  name: faas
+  gateway: http://127.0.0.1:8080
+functions:
+  leaderboard:
+    lang: golang-middleware
+    handler: ./leaderboard
+    image: leaderboard:latest
+  github-sub:
+    lang: golang-middleware
+    handler: ./github-sub
+    image: github-sub:latest
