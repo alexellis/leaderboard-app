@@ -19,8 +19,8 @@ CREATE TABLE users (
     track           BOOLEAN NOT NULL,
     created_at      timestamp not null
 );
-insert into users (user_id,user_login,track) values (653013,'alexellis',true);
-insert into users (user_id,user_login,track) values (103022,'rgee0',true);
+insert into users (user_id,user_login,track, created_at) values (653013,'alexellisuk',true,now());
+insert into users (user_id,user_login,track, created_at) values (103022,'rgee0',true,now());
 
 CREATE TABLE activity (
     id              INT GENERATED ALWAYS AS IDENTITY,

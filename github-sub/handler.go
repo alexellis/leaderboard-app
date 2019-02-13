@@ -60,14 +60,19 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	if issueEvent, ok := event.(*github.IssuesEvent); ok {
 		switch *issueEvent.Action {
 		case "opened":
-			msg = " (issue opened) by " + issueEvent.Sender.GetLogin()
+			login := issueEvent.Sender.GetLogin()
+			id := issueEvent.Sender.GetID()
+			msg = " (issue opened) by " + login
+			owner := issueEvent.Repo.GetOwner().Login
+			repo := issueEvent.Repo.GetName()
 
-			insertErr := insertUser(issueEvent.Sender.GetLogin(),
-				issueEvent.Sender.GetID(),
-				true)
+			insertErr := insertUser(login, id, true)
 			if insertErr != nil {
 				log.Printf("%s\n", insertErr.Error())
 			}
+
+			//insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,653013,'issue_created','2019-02-13 07:44:00','openfaas','org-tester');
+			insertActivity(id, "issue_created", owner, repo)
 		}
 	}
 
@@ -75,13 +80,18 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		switch *issueCommentEvent.Action {
 		case "created":
 			msg = " (comment created) by " + issueCommentEvent.Sender.GetLogin()
+			login := issueCommentEvent.Sender.GetLogin()
+			id := issueCommentEvent.Sender.GetID()
+			owner := issueCommentEvent.Repo.GetOwner().Login
+			repo := issueCommentEvent.Repo.GetName()
 
-			insertErr := insertUser(issueCommentEvent.Sender.GetLogin(),
-				issueCommentEvent.Sender.GetID(),
-				true)
+			insertErr := insertUser(login, id, true)
+
 			if insertErr != nil {
 				log.Printf("%s\n", insertErr.Error())
 			}
+
+			insertActivity(id, "issue_comment", owner, repo)
 		}
 	}
 
@@ -99,6 +109,14 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 func insertUser(login string, ID int64, track bool) error {
 	_, err := db.Query(`insert into users (user_id, user_login, track, created_at) values ($1, $2, $3, now());`,
 		ID, login, track)
+
+	return err
+}
+
+//insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,653013,'issue_created','2019-02-13 07:44:00','openfaas','org-tester');
+func insertActivity(loginID int64, activityType, owner, repo string) error {
+	_, err := db.Query(`insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,$1, $2, now(), $4, $5);`,
+		loginID, activityType, owner, repo)
 
 	return err
 }
