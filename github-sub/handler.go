@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/go-github/github"
 	_ "github.com/lib/pq"
+	"github.com/pkg/errors"
 
 	"github.com/openfaas/openfaas-cloud/sdk"
 )
@@ -51,9 +52,13 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 
 	body, _ := ioutil.ReadAll(r.Body)
 
-	valid := github.ValidateSignature(r.Header.Get("X-Hub-Signature"), body, []byte(webhookSecret))
-	if valid != nil {
-		log.Printf("Valid? %q", valid)
+	invalid := github.ValidateSignature(r.Header.Get("X-Hub-Signature"), body, []byte(webhookSecret))
+	if invalid != nil {
+		resErr := errors.Wrap(invalid, "signature was invalid")
+		log.Printf("%s\n", resErr.Error())
+		http.Error(w, resErr.Error(), http.StatusBadRequest)
+
+		return
 	}
 
 	event, err := github.ParseWebHook(webhookType, body)
