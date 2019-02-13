@@ -50,6 +50,12 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Webhook secret: %d", len(webhookSecret))
 
 	body, _ := ioutil.ReadAll(r.Body)
+
+	valid := github.ValidateSignature(r.Header.Get("X-Hub-Signature"), body, []byte(webhookSecret))
+	if valid != nil {
+		log.Printf("Valid? %q", valid)
+	}
+
 	event, err := github.ParseWebHook(webhookType, body)
 
 	if err != nil {
