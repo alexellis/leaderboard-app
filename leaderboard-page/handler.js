@@ -1,5 +1,7 @@
 "use strict"
 
+const fs = require("fs");
+
 module.exports = (event, context) => {
     const { method, path } = event;
 
