@@ -63,27 +63,32 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 			login := issueEvent.Sender.GetLogin()
 			id := issueEvent.Sender.GetID()
 			msg = " (issue opened) by " + login
-			owner := issueEvent.Repo.GetOwner().Login
+			owner := *issueEvent.Repo.GetOwner().Login
 			repo := issueEvent.Repo.GetName()
-
+			activityType := "issue_created"
 			insertErr := insertUser(login, id, true)
 			if insertErr != nil {
 				log.Printf("%s\n", insertErr.Error())
 			}
 
 			//insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,653013,'issue_created','2019-02-13 07:44:00','openfaas','org-tester');
-			insertActivity(id, "issue_created", owner, repo)
+			activityErr := insertActivity(id, activityType, owner, repo)
+			if activityErr != nil {
+				log.Printf("%s\n", activityErr.Error())
+			}
 		}
 	}
 
 	if issueCommentEvent, ok := event.(*github.IssueCommentEvent); ok {
 		switch *issueCommentEvent.Action {
 		case "created":
+
 			msg = " (comment created) by " + issueCommentEvent.Sender.GetLogin()
 			login := issueCommentEvent.Sender.GetLogin()
 			id := issueCommentEvent.Sender.GetID()
-			owner := issueCommentEvent.Repo.GetOwner().Login
+			owner := *issueCommentEvent.Repo.GetOwner().Login
 			repo := issueCommentEvent.Repo.GetName()
+			activityType := "issue_comment"
 
 			insertErr := insertUser(login, id, true)
 
@@ -91,7 +96,10 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 				log.Printf("%s\n", insertErr.Error())
 			}
 
-			insertActivity(id, "issue_comment", owner, repo)
+			activityErr := insertActivity(id, activityType, owner, repo)
+			if activityErr != nil {
+				log.Printf("%s\n", activityErr.Error())
+			}
 		}
 	}
 
