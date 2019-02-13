@@ -1,8 +1,22 @@
 # leaderboard-app - a serverless application
 
+[![OpenFaaS](https://img.shields.io/badge/openfaas-cloud-blue.svg)](https://www.openfaas.com)
+
 This application is a single-page app providing a GitHub leaderboard for your organisation or repo.
 
 Data is stored in postgres using a remote or in-cluster DBaaS.
+
+See a live example tracking the orgs: openfaas/openfaas-incubator: [https://alexellis.o6s.io/leaderboard-page](https://alexellis.o6s.io/leaderboard-page)
+
+To test out the functionality comment on this issue: [Issue: Let's test the leaderboard!](https://github.com/openfaas/org-tester/issues/16)
+
+Dark Leaderboard example
+
+![Dark Leaderboard example](docs/leaderboard-dark.png)
+
+Subscribe to events by adding a webhook to the github-sub function:
+
+![Subscribe](docs/subscribe.png)
 
 ## Functions
 
