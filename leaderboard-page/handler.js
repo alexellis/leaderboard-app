@@ -25,7 +25,7 @@ module.exports = (event, context) => {
       headers['Content-Type'] = 'application/octet-stream';
     }
   
-    let contentPath = `${__dirname}${path}`;
+    let contentPath = `${__dirname}client/dist${path}`;
   
     if (!headers['Content-Type']) {
       contentPath = `${__dirname}/client/dist/index.html`;
