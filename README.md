@@ -91,3 +91,4 @@ $$  LANGUAGE 'plpgsql' VOLATILE;
 select * from get_leaderboard();
 
 ```
+
