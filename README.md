@@ -16,7 +16,8 @@ drop table users;
 CREATE TABLE users (
     user_id         integer PRIMARY KEY NOT NULL,
     user_login      text NOT NULL,
-    track           BOOLEAN NOT NULL
+    track           BOOLEAN NOT NULL,
+    created_at      timestamp not null
 );
 insert into users (user_id,user_login,track) values (653013,'alexellis',true);
 insert into users (user_id,user_login,track) values (103022,'rgee0',true);

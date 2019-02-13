@@ -97,8 +97,8 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 }
 
 func insertUser(login string, ID int64, track bool) error {
-	_, err := db.Query(`insert into users (user_id, user_login, track) values ($1, $2, $3);`,
-		login, ID, track)
+	_, err := db.Query(`insert into users (user_id, user_login, track, created_at) values ($1, $2, $3, now());`,
+		ID, login, track)
 
 	return err
 }
