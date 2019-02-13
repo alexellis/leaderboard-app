@@ -1,5 +1,5 @@
 <template>
-  <v-app dark>
+  <v-app>
     <v-toolbar app>
       <v-toolbar-title class="headline text-uppercase">
         <span>Leaderboard</span>
