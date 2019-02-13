@@ -45,10 +45,9 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 
 	if getErr != nil {
 		log.Printf("get error: %s", getErr.Error())
-		return handler.Response{
-			Body:       []byte(errors.Wrap(getErr, "unable to get from leaderboard")),
-			StatusCode: http.StatusInternalServerError,
-		}, updateErr
+		http.Error(w, errors.Wrap(getErr, "unable to get from leaderboard").Error(),
+			http.StatusInternalServerError)
+		return
 	}
 
 	results := []Result{}
