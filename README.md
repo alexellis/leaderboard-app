@@ -1,11 +1,22 @@
-# leaderboard-app
+# leaderboard-app - a serverless application
 
-GitHub leaderboard for your organisation or repo
+This application is a single-page app providing a GitHub leaderboard for your organisation or repo.
+
+Data is stored in postgres using a remote or in-cluster DBaaS.
 
 ## Functions
 
 * github-sub
+
+Receives webhooks from GitHub via an organization or repo subscription. Secured with HMAC by Alex Ellis
+
 * leaderboard
+
+Retrieves the current leaderboard in JSON by Alex Ellis
+
+* leaderboard-page
+
+Renders the leaderboard itself as a Vue.js app by Ken Fukuyama
 
 ## Schema
 
@@ -80,6 +91,3 @@ $$  LANGUAGE 'plpgsql' VOLATILE;
 select * from get_leaderboard();
 
 ```
-
-
-
