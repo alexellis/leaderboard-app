@@ -23,3 +23,8 @@ functions:
       postgres_port: 25060
     secrets:
       - leaderboard-app-secrets
+
+  leaderboard-page:
+    lang: node8-express
+    handler: ./leaderboard-page
+    image: leaderboard-page:latest
