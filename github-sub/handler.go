@@ -46,9 +46,10 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 	}
 
-	webhookType := github.WebHookType(r)
-	webhookSecret, _ := sdk.ReadSecret("webhook-secret")
-	log.Printf("Webhook secret: %d", len(webhookSecret))
+	webhookSecret, webhookSecretErr := sdk.ReadSecret("webhook-secret")
+	if webhookSecretErr != nil {
+		log.Printf("Webhook secret error: %s", webhookSecretErr.Error())
+	}
 
 	body, _ := ioutil.ReadAll(r.Body)
 
@@ -61,6 +62,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	webhookType := github.WebHookType(r)
 	event, err := github.ParseWebHook(webhookType, body)
 
 	if err != nil {
