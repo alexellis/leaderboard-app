@@ -1,22 +1,77 @@
 package function
 
 import (
-	"fmt"
-	"io/ioutil"
+	"database/sql"
+	"encoding/json"
+	"log"
 	"net/http"
+	"os"
+
+	_ "github.com/lib/pq"
+	"github.com/pkg/errors"
+
+	"github.com/openfaas/openfaas-cloud/sdk"
 )
 
-func Handle(w http.ResponseWriter, r *http.Request) {
-	var input []byte
+var db *sql.DB
 
-	if r.Body != nil {
-		defer r.Body.Close()
+func init() {
 
-		body, _ := ioutil.ReadAll(r.Body)
+	password, _ := sdk.ReadSecret("password")
+	user, _ := sdk.ReadSecret("username")
+	host, _ := sdk.ReadSecret("host")
+	dbName := os.Getenv("postgres_db")
+	port := os.Getenv("postgres_port")
+	sslmode := os.Getenv("postgres_sslmode")
 
-		input = body
+	connStr := "postgres://" + user + ":" + password + "@" + host + ":" + port + "/" + dbName + "?sslmode=" + sslmode
+
+	var err error
+	db, err = sql.Open("postgres", connStr)
+
+	if err != nil {
+		panic(err.Error())
 	}
 
+	err = db.Ping()
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
+func Handle(w http.ResponseWriter, r *http.Request) {
+
+	rows, getErr := db.Query(`select * from get_leaderboard();`)
+
+	if getErr != nil {
+		log.Printf("get error: %s", getErr.Error())
+		return handler.Response{
+			Body:       []byte(errors.Wrap(getErr, "unable to get from leaderboard")),
+			StatusCode: http.StatusInternalServerError,
+		}, updateErr
+	}
+
+	results := []Result{}
+	defer rows.Close()
+	for rows.Next() {
+		result := Result{}
+		scanErr := rows.Scan(&result.userID, &result.userLogin, &result.issueComments, &result.issuesCreated)
+		if scanErr != nil {
+			log.Println("scan err:", scanErr)
+		}
+		results = append(results, result)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("Hello world, input was: %s", string(input))))
+	res, _ := json.Marshal(results)
+	w.Write(res)
+}
+
+type Result struct {
+	userID    int
+	userLogin string
+
+	issueComments int
+	issuesCreated int
 }
