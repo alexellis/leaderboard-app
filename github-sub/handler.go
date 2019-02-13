@@ -129,7 +129,7 @@ func insertUser(login string, ID int64, track bool) error {
 
 //insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,653013,'issue_created','2019-02-13 07:44:00','openfaas','org-tester');
 func insertActivity(loginID int64, activityType, owner, repo string) error {
-	_, err := db.Query(`insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,$1, $2, now(), $4, $5);`,
+	_, err := db.Query(`insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,$1, $2, now(), $3, $4);`,
 		loginID, activityType, owner, repo)
 
 	return err
