@@ -11,8 +11,8 @@
                    text-xs-center>
         <v-layout row
                   wrap>
-          <v-flex offset-md3
-                  md6
+          <v-flex offset-md2
+                  md8
                   offset-xs2
                   xs8>
             <template>
