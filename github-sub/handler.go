@@ -62,9 +62,12 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		case "opened":
 			msg = " (issue opened) by " + issueEvent.Sender.GetLogin()
 
-			insertUser(issueEvent.Sender.GetLogin(),
+			insertErr := insertUser(issueEvent.Sender.GetLogin(),
 				issueEvent.Sender.GetID(),
 				true)
+			if insertErr != nil {
+				log.Printf("%s\n", insertErr.Error())
+			}
 		}
 	}
 
@@ -73,9 +76,12 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		case "created":
 			msg = " (comment created) by " + issueCommentEvent.Sender.GetLogin()
 
-			insertUser(issueCommentEvent.Sender.GetLogin(),
+			insertErr := insertUser(issueCommentEvent.Sender.GetLogin(),
 				issueCommentEvent.Sender.GetID(),
 				true)
+			if insertErr != nil {
+				log.Printf("%s\n", insertErr.Error())
+			}
 		}
 	}
 
@@ -91,9 +97,8 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 }
 
 func insertUser(login string, ID int64, track bool) error {
-	_, err := db.Query(`insert into users`+
-		` (user_id, user_login, track) values ($1, $2, $3);`,
-		login, int(ID), track)
+	_, err := db.Query(`insert into users (user_id, user_login, track) values ($1, $2, $3);`,
+		login, ID, track)
 
 	return err
 }
