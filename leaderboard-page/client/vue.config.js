@@ -1,4 +1,5 @@
 module.exports = {
+  publicPath: '/leaderboard-page/',
   devServer: {
     proxy: {
       '^/api/*': {
