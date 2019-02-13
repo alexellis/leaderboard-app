@@ -71,7 +71,8 @@ on a.user_id= cm.user_id
     and a.repo = cm.repo
     and cm.activity_type = 'issue_created'
 where u.track = true
-group by a.user_id, u.user_login;
+group by a.user_id, u.user_login
+order by issue_comments desc, issues_created desc;
 END
 $$  LANGUAGE 'plpgsql' VOLATILE;
 

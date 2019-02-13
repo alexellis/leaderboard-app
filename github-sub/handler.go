@@ -61,6 +61,10 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		switch *issueEvent.Action {
 		case "opened":
 			msg = " (issue opened) by " + issueEvent.Sender.GetLogin()
+
+			insertUser(issueEvent.Sender.GetLogin(),
+				issueEvent.Sender.GetID(),
+				true)
 		}
 	}
 
@@ -68,6 +72,10 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		switch *issueCommentEvent.Action {
 		case "created":
 			msg = " (comment created) by " + issueCommentEvent.Sender.GetLogin()
+
+			insertUser(issueCommentEvent.Sender.GetLogin(),
+				issueCommentEvent.Sender.GetID(),
+				true)
 		}
 	}
 
@@ -80,4 +88,12 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Ping OK" + msg))
+}
+
+func insertUser(login string, ID int64, track bool) error {
+	_, err := db.Query(`insert into users`+
+		` (user_id, user_login, track) values ($1, $2, $3);`,
+		login, int(ID), track)
+
+	return err
 }
