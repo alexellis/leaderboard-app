@@ -15,11 +15,14 @@ import (
 
 var db *sql.DB
 
+// init establishes a persistent connection to the remote database
+// the function will panic if it cannot establish a link and the
+// container will restart / go into a crash/back-off loop
 func init() {
-
 	password, _ := sdk.ReadSecret("password")
 	user, _ := sdk.ReadSecret("username")
 	host, _ := sdk.ReadSecret("host")
+
 	dbName := os.Getenv("postgres_db")
 	port := os.Getenv("postgres_port")
 	sslmode := os.Getenv("postgres_sslmode")
@@ -39,6 +42,7 @@ func init() {
 	}
 }
 
+// Handle a HTTP request as a middleware processor.
 func Handle(w http.ResponseWriter, r *http.Request) {
 
 	rows, getErr := db.Query(`select * from get_leaderboard();`)

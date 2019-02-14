@@ -16,11 +16,14 @@ import (
 
 var db *sql.DB
 
+// init establishes a persistent connection to the remote database
+// the function will panic if it cannot establish a link and the
+// container will restart / go into a crash/back-off loop
 func init() {
-
 	password, _ := sdk.ReadSecret("password")
 	user, _ := sdk.ReadSecret("username")
 	host, _ := sdk.ReadSecret("host")
+
 	dbName := os.Getenv("postgres_db")
 	port := os.Getenv("postgres_port")
 	sslmode := os.Getenv("postgres_sslmode")
@@ -40,10 +43,18 @@ func init() {
 	}
 }
 
+// Handle a HTTP request as a middleware processor.
 func Handle(w http.ResponseWriter, r *http.Request) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
+	}
+
+	dbErr := db.Ping()
+	if dbErr != nil {
+		w.WriteHeader(http.StatusOK)
+		http.Error(w, dbErr.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	webhookSecret, webhookSecretErr := sdk.ReadSecret("webhook-secret")
@@ -53,6 +64,8 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 
 	body, _ := ioutil.ReadAll(r.Body)
 
+	// Validate using HMAC that the incoming request is signed by GitHub using the
+	// symmetric key.
 	invalid := github.ValidateSignature(r.Header.Get("X-Hub-Signature"), body, []byte(webhookSecret))
 	if invalid != nil {
 		resErr := errors.Wrap(invalid, "signature was invalid")
@@ -69,6 +82,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
+	// Only two event types are supported for logging
 	msg := ""
 	if issueEvent, ok := event.(*github.IssuesEvent); ok {
 		switch *issueEvent.Action {
@@ -84,7 +98,6 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 				log.Printf("%s\n", insertErr.Error())
 			}
 
-			//insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,653013,'issue_created','2019-02-13 07:44:00','openfaas','org-tester');
 			activityErr := insertActivity(id, activityType, owner, repo)
 			if activityErr != nil {
 				log.Printf("%s\n", activityErr.Error())
@@ -116,17 +129,13 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	dbErr := db.Ping()
-	if dbErr != nil {
-		w.WriteHeader(http.StatusOK)
-		http.Error(w, dbErr.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	w.WriteHeader(http.StatusOK)
+	// This message will appear on your GitHub webhook audit page
 	w.Write([]byte("Ping OK" + msg))
 }
 
+// insertUser will insert a user, or fail if the row already exists, this could be
+// converted to an "upsert"
 func insertUser(login string, ID int64, track bool) error {
 	_, err := db.Query(`insert into users (user_id, user_login, track, created_at) values ($1, $2, $3, now());`,
 		ID, login, track)
@@ -134,7 +143,7 @@ func insertUser(login string, ID int64, track bool) error {
 	return err
 }
 
-//insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,653013,'issue_created','2019-02-13 07:44:00','openfaas','org-tester');
+// insertActivity tracks the activity using now() for the date/time
 func insertActivity(loginID int64, activityType, owner, repo string) error {
 	_, err := db.Query(`insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,$1, $2, now(), $3, $4);`,
 		loginID, activityType, owner, repo)
