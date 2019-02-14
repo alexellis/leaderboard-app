@@ -137,16 +137,23 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 // insertUser will insert a user, or fail if the row already exists, this could be
 // converted to an "upsert"
 func insertUser(login string, ID int64, track bool) error {
-	_, err := db.Query(`insert into users (user_id, user_login, track, created_at) values ($1, $2, $3, now());`,
+	res, err := db.Query(`insert into users (user_id, user_login, track, created_at) values ($1, $2, $3, now());`,
 		ID, login, track)
+
+	if err == nil {
+		defer res.Close()
+	}
 
 	return err
 }
 
 // insertActivity tracks the activity using now() for the date/time
 func insertActivity(loginID int64, activityType, owner, repo string) error {
-	_, err := db.Query(`insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,$1, $2, now(), $3, $4);`,
+	res, err := db.Query(`insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,$1, $2, now(), $3, $4);`,
 		loginID, activityType, owner, repo)
+	if err == nil {
+		defer res.Close()
+	}
 
 	return err
 }
