@@ -2,15 +2,16 @@
 
 [![OpenFaaS](https://img.shields.io/badge/openfaas-cloud-blue.svg)](https://www.openfaas.com)
 
-This application is a single-page app providing a GitHub leaderboard for your organisation or repo.
+This application is an example of how to write a Single Page App (SPA) with a Serverless approach. It provides a live leaderboard for your GitHub organisation or repos showing comments made and issues opened by your community and contributors.
 
-Data is stored in postgres using a remote or in-cluster DBaaS.
+* The front-end is written with Vue.js
+* The backing data-store data is Postgres with a remote DBaaS or in-cluster deployment
 
-See a live example tracking the orgs: openfaas/openfaas-incubator: [https://alexellis.o6s.io/leaderboard-page](https://alexellis.o6s.io/leaderboard-page)
+See a live example tracking the openfaas/openfaas-incubator organizations: [https://alexellis.o6s.io/leaderboard-page](https://alexellis.o6s.io/leaderboard-page)
 
-To test out the functionality comment on this issue: [Issue: Let's test the leaderboard!](https://github.com/openfaas/org-tester/issues/16)
+To test out the functionality comment on this issue: [Issue: Let's test the leaderboard!](https://github.com/openfaas/org-tester/issues/18)
 
-Dark Leaderboard example
+Here's a preview of the app when the dark theme is enabled: 
 
 ![Dark Leaderboard example](docs/leaderboard-dark.png)
 
@@ -103,6 +104,10 @@ END
 $$  LANGUAGE 'plpgsql' VOLATILE;
 
 select * from get_leaderboard();
-
 ```
 
+## Contributing & license
+
+Please feel free to fork and star this repo and use it as a template for your own applications. The license is MIT.
+
+To contribute see [CONTRIBUTING.md](./CONTRIBUTING.md)
