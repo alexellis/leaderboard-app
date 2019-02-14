@@ -16,7 +16,8 @@
                   offset-xs2
                   xs8>
             <template>
-              <v-data-table :headers="headers"
+              <v-data-table :rows-per-page-items="[50, 100, 150]"
+                            :headers="headers"
                             :items="items"
                             class="elevation-1">
                 <template slot="items"
