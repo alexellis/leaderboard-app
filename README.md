@@ -111,3 +111,4 @@ select * from get_leaderboard();
 Please feel free to fork and star this repo and use it as a template for your own applications. The license is MIT.
 
 To contribute see [CONTRIBUTING.md](./CONTRIBUTING.md)
+
