@@ -1,5 +1,5 @@
 -- Changing the return type, must drop first
-DROP FUNCTION get_leaderboard
+DROP FUNCTION get_leaderboard();
 
 -- Create the function with the new return values
 CREATE FUNCTION get_leaderboard()

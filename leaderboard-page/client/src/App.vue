@@ -33,6 +33,8 @@
                        target="_blank">{{ props.item.UserLogin }}</a></td>
                   <td class="text-xs-right">{{ props.item.IssueComments }}</td>
                   <td class="text-xs-right">{{ props.item.IssuesCreated }}</td>
+                  <td class="text-xs-right">{{ props.item.PullRequestsCreated }}</td>
+                  <td class="text-xs-right">{{ props.item.PRReviewComments }}</td>
                 </template>
               </v-data-table>
             </template>
