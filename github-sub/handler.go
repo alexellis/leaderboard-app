@@ -105,6 +105,27 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if pullRequestEvent, ok := event.(*github.PullRequestEvent); ok {
+		switch *pullRequestEvent.Action {
+		case "opened":
+			login := pullRequestEvent.Sender.GetLogin()
+			id := pullRequestEvent.Sender.GetID()
+			msg = " (pull request opened) by " + login
+			owner := *pullRequestEvent.Repo.GetOwner().Login
+			repo := pullRequestEvent.Repo.GetName()
+			activityType := "pull_request_opened"
+			insertErr := insertUser(login, id, true)
+			if insertErr != nil {
+				log.Printf("%s\n", insertErr.Error())
+			}
+
+			activityErr := insertActivity(id, activityType, owner, repo)
+			if activityErr != nil {
+				log.Printf("%s\n", activityErr.Error())
+			}
+		}
+	}
+
 	if issueCommentEvent, ok := event.(*github.IssueCommentEvent); ok {
 		switch *issueCommentEvent.Action {
 		case "created":
@@ -115,6 +136,29 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 			owner := *issueCommentEvent.Repo.GetOwner().Login
 			repo := issueCommentEvent.Repo.GetName()
 			activityType := "issue_comment"
+
+			insertErr := insertUser(login, id, true)
+
+			if insertErr != nil {
+				log.Printf("%s\n", insertErr.Error())
+			}
+
+			activityErr := insertActivity(id, activityType, owner, repo)
+			if activityErr != nil {
+				log.Printf("%s\n", activityErr.Error())
+			}
+		}
+	}
+
+	if prReviewCommentEvent, ok := event.(*github.PullRequestReviewCommentEvent); ok {
+		switch *prReviewCommentEvent.Action {
+		case "created":
+			msg = " (pr review comment created) by " + prReviewCommentEvent.Sender.GetLogin()
+			login := prReviewCommentEvent.Sender.GetLogin()
+			id := prReviewCommentEvent.Sender.GetID()
+			owner := *prReviewCommentEvent.Repo.GetOwner().Login
+			repo := prReviewCommentEvent.Repo.GetName()
+			activityType := "pr_review_comment"
 
 			insertErr := insertUser(login, id, true)
 

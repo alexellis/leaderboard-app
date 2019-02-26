@@ -58,7 +58,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 	for rows.Next() {
 		result := Result{}
-		scanErr := rows.Scan(&result.UserID, &result.UserLogin, &result.IssueComments, &result.IssuesCreated)
+		scanErr := rows.Scan(&result.UserID, &result.UserLogin, &result.IssueComments, &result.PRReviewComments, &result.IssuesCreated, &result.PullRequestsCreated)
 		if scanErr != nil {
 			log.Println("scan err:", scanErr)
 		}
@@ -75,6 +75,8 @@ type Result struct {
 	UserID    int
 	UserLogin string
 
-	IssueComments int
-	IssuesCreated int
+	IssueComments       int
+	PRReviewComments    int
+	IssuesCreated       int
+	PullRequestsCreated int
 }

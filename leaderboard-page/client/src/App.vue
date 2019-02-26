@@ -69,6 +69,14 @@ export default {
         {
           text: "issues opened",
           value: "IssuesCreated"
+        },
+        {
+          text: "pull requests opened",
+          value: "PullRequestsCreated"
+        },
+        {
+          text: "review comments",
+          value: "PRReviewComments"
         }
       ],
       items: []
