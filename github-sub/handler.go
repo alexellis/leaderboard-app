@@ -57,22 +57,25 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	webhookSecret, webhookSecretErr := sdk.ReadSecret("webhook-secret")
-	if webhookSecretErr != nil {
-		log.Printf("Webhook secret error: %s", webhookSecretErr.Error())
-	}
-
 	body, _ := ioutil.ReadAll(r.Body)
 
-	// Validate using HMAC that the incoming request is signed by GitHub using the
-	// symmetric key.
-	invalid := github.ValidateSignature(r.Header.Get("X-Hub-Signature"), body, []byte(webhookSecret))
-	if invalid != nil {
-		resErr := errors.Wrap(invalid, "signature was invalid")
-		log.Printf("%s\n", resErr.Error())
-		http.Error(w, resErr.Error(), http.StatusBadRequest)
+	if enforceHMAC, ok := os.LookupEnv("enforce_hmac"); !ok || enforceHMAC == "true" {
 
-		return
+		webhookSecret, webhookSecretErr := sdk.ReadSecret("webhook-secret")
+		if webhookSecretErr != nil {
+			log.Printf("Webhook secret error: %s", webhookSecretErr.Error())
+		}
+
+		// Validate using HMAC that the incoming request is signed by GitHub using the
+		// symmetric key.
+		invalid := github.ValidateSignature(r.Header.Get("X-Hub-Signature"), body, []byte(webhookSecret))
+		if invalid != nil {
+			resErr := errors.Wrap(invalid, "signature was invalid")
+			log.Printf("%s\n", resErr.Error())
+			http.Error(w, resErr.Error(), http.StatusBadRequest)
+
+			return
+		}
 	}
 
 	webhookType := github.WebHookType(r)

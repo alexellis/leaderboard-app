@@ -41,31 +41,43 @@ Renders the leaderboard itself as a Vue.js app by Ken Fukuyama
 
 * Deploy OpenFaaS
 
-* Grab the node8-express template
+The quickest/easiest option is to use Swarm.
+
+* Grab custom templates
 
 ```
 faas-cli template store pull node8-express
+faas-cli template store pull golang-middlware
 ```
 
 * Create the required secrets
 
 ```
-
 export PASS=""
 export USER=""
 export HOST=""
-export WEBHOOK=""   # As set on the webhook page on GitHub
+export WEBHOOK="secret"   # As set on the webhook page on GitHub
 
-faas-cli secret create leaderboard-app-secrets \
-  --literal password="$PASS" \
-  --literal username="$USER" \
-  --literal host="$HOST" \
-  --literal webhook-secret="$WEBHOOK"
+# Kubernetes
+faas-cli secret create leaderboard-app-secrets-password
+  --from-literal=password="$PASS" \
+  --from-literal=username="$USER" \
+  --from-literal=host="$HOST" \
+  --from-literal=webhook-secret="${WEBHOOK}"
+
+# Swarm
+
+faas-cli secret create password --from-literal="$PASS"
+faas-cli secret create username --from-literal="$USER"
+faas-cli secret create host --from-literal="$HOST"
+faas-cli secret create webhook-secret --from-literal="${WEBHOOK}"
+
+# Then apply each secret to the required function in local.yml
 ```
 
-* Deploy the stack.yml file with a prefix
+* Rename the stack.yml to local.yml
 
-Either edit the stack.yml and add the prefix for each function or run:
+Edit local.yml and rename the functions:
 
 ```
 leaderboard => alexellis-leaderboard
@@ -73,17 +85,56 @@ github-sub => alexellis-github-sub
 leaderboard-page => alexellis-leaderboard-page
 ```
 
+Then add a prefix for each function's Docker image name and run `faas-cli build -f local.yml`
+
 * Deploy `of-router`:
 
-Do this with auth turned off
+Via: https://github.com/openfaas/openfaas-cloud/tree/master/router
 
-https://github.com/openfaas/openfaas-cloud/tree/master/router
+Deploy a fake auth function:
+
+```
+faas-cli store deploy figlet
+```
+
+Deploy the router:
+
+```
+TAG=0.6.0
+docker service rm of-router
+
+docker service create --network=func_functions \
+ --env upstream_url=http://gateway:8080 \
+ --env auth_url=http://figlet:8080 \
+ --publish 8081:8080 \
+ --name of-router \
+ -d openfaas/cloud-router:$TAG
+```
 
 * Create entries in: `/etc/hosts`
 
 ```
-alexellis.local-o6s.io    127.0.0.1
+127.0.0.1 alexellis.local-o6s.io
 ```
+
+* Initialize Postgres
+
+Provision Postgres 10 and set up your initial table schema and function:
+
+```
+export CONNECTION_STRING=""
+docker run-ti postgres:10 pql ${CONNECTION_STRING}
+```
+
+Copy/paste from [schema-1.0.sql](sql/schema-1.0.sql)
+
+* Test the JSON function:
+
+http://127.0.0.1:8080/function/alexellis-leaderboard
+
+* Test the Vue.js page:
+
+http://alexellis.local-o6s.io:8081/leaderboard-page
 
 ## Contributing & license
 

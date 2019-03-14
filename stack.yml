@@ -1,11 +1,11 @@
 provider:
-  name: faas
+  name: openfaas
   gateway: http://127.0.0.1:8080
 functions:
   leaderboard:
     lang: golang-middleware
     handler: ./leaderboard
-    image: leaderboard:latest
+    image: leaderboard:1.1.0
     environment:
       postgres_db: defaultdb
       postgres_sslmode: require
@@ -16,15 +16,16 @@ functions:
   github-sub:
     lang: golang-middleware
     handler: ./github-sub
-    image: github-sub:latest
+    image: github-sub:1.1.0
     environment:
       postgres_db: defaultdb
       postgres_sslmode: require
       postgres_port: 25060
+      enforce_hmac: true
     secrets:
       - leaderboard-app-secrets
 
   leaderboard-page:
     lang: node8-express
     handler: ./leaderboard-page
-    image: leaderboard-page:latest
+    image: leaderboard-page:1.1.0
