@@ -35,92 +35,106 @@ Renders the leaderboard itself as a Vue.js app by Ken Fukuyama
 
 ## Schema
 
-```sql
-drop table activity cascade;
-drop table users;
+* [schema-1.0.sql](sql/schema-1.0.sql)
 
-CREATE TABLE users (
-    user_id         integer PRIMARY KEY NOT NULL,
-    user_login      text NOT NULL,
-    track           BOOLEAN NOT NULL,
-    created_at      timestamp not null
-);
-insert into users (user_id,user_login,track, created_at) values (653013,'alexellisuk',true,now());
-insert into users (user_id,user_login,track, created_at) values (103022,'rgee0',true,now());
+## Running locally
 
-CREATE TABLE activity (
-    id              INT GENERATED ALWAYS AS IDENTITY,
-    user_id         integer NOT NULL references users(user_id),
-    activity_type   text NOT NULL,
-    activity_date   timestamp NOT NULL,
-    owner           text NOT NULL,
-    repo            text NOT NULL
-);
+* Deploy OpenFaaS
 
-insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,653013,'issue_created','2019-02-13 07:44:00','openfaas','org-tester');
-insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,653013,'issue_comment','2019-02-13 07:44:05','openfaas','org-tester');
-insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,653013,'issue_comment','2019-02-12 07:44:05','openfaas','org-tester');
-insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,103022,'issue_comment','2019-02-12 07:44:05','openfaas','org-tester');
+The quickest/easiest option is to use Swarm.
 
-select * from activity order by activity_date  asc; 
+* Grab custom templates
 
-select a.user_id, a.activity_type, count(a.id) from activity as a
-where a.activity_date <= now()
-group by (a.user_id, a.activity_type) ;
-
-drop function get_leaderboard;
-
-CREATE or REPLACE FUNCTION get_leaderboard()
-    RETURNS TABLE(user_id integer, user_login text, issue_comments bigint, pr_comments bigint, issues_created bigint, pr_created bigint)
-  AS
-$$
-BEGIN
-RETURN QUERY select
-    a.user_id,
-    u.user_login,
-    count(ic.activity_type) as issue_comments,
-    count(prc.activity_type) as pr_comments,
-    count(cm.activity_type) as issues_created,
-    count(pr.activity_type) as pr_created
-from activity as a
-inner join users u
-on a.user_id = u.user_id
-left outer join activity as ic
-on a.user_id= ic.user_id
-    and a.activity_type = ic.activity_type
-    and a.activity_date = ic.activity_date
-    and a.owner = ic.owner
-    and a.repo = ic.repo
-    and ic.activity_type = 'issue_comment'
-LEFT OUTER JOIN activity AS prc
-ON a.user_id = prc.user_id
-    and a.activity_type = prc.activity_type
-    and a.activity_date = prc.activity_date
-    and a.owner = prc.owner
-    and a.repo = prc.repo
-    and prc.activity_type = 'pr_review_comment'
-left outer join activity as cm
-on a.user_id= cm.user_id
-    and a.activity_type = cm.activity_type
-    and a.activity_date = cm.activity_date
-    and a.owner = cm.owner
-    and a.repo = cm.repo
-    and cm.activity_type = 'issue_created'
-LEFT OUTER JOIN activity AS pr
-ON a.user_id = pr.user_id
-    and a.activity_type = pr.activity_type
-    and a.activity_date = pr.activity_date
-    and a.owner = pr.owner
-    and a.repo = pr.repo
-    and pr.activity_type = 'pull_request_opened'
-where u.track = true
-group by a.user_id, u.user_login
-order by issue_comments desc, issues_created desc;
-END
-$$  LANGUAGE 'plpgsql' VOLATILE;
-
-select * from get_leaderboard();
 ```
+faas-cli template store pull node8-express
+faas-cli template store pull golang-middlware
+```
+
+* Create the required secrets
+
+```
+export PASS=""
+export USER=""
+export HOST=""
+export WEBHOOK="secret"   # As set on the webhook page on GitHub
+
+# Kubernetes
+faas-cli secret create leaderboard-app-secrets-password
+  --from-literal=password="$PASS" \
+  --from-literal=username="$USER" \
+  --from-literal=host="$HOST" \
+  --from-literal=webhook-secret="${WEBHOOK}"
+
+# Swarm
+
+faas-cli secret create password --from-literal="$PASS"
+faas-cli secret create username --from-literal="$USER"
+faas-cli secret create host --from-literal="$HOST"
+faas-cli secret create webhook-secret --from-literal="${WEBHOOK}"
+
+# Then apply each secret to the required function in local.yml
+```
+
+* Rename the stack.yml to local.yml
+
+Edit local.yml and rename the functions:
+
+```
+leaderboard => alexellis-leaderboard
+github-sub => alexellis-github-sub
+leaderboard-page => alexellis-leaderboard-page
+```
+
+Then add a prefix for each function's Docker image name and run `faas-cli build -f local.yml`
+
+* Deploy `of-router`:
+
+Via: https://github.com/openfaas/openfaas-cloud/tree/master/router
+
+Deploy a fake auth function:
+
+```
+faas-cli store deploy figlet
+```
+
+Deploy the router:
+
+```
+TAG=0.6.0
+docker service rm of-router
+
+docker service create --network=func_functions \
+ --env upstream_url=http://gateway:8080 \
+ --env auth_url=http://figlet:8080 \
+ --publish 8081:8080 \
+ --name of-router \
+ -d openfaas/cloud-router:$TAG
+```
+
+* Create entries in: `/etc/hosts`
+
+```
+127.0.0.1 alexellis.local-o6s.io
+```
+
+* Initialize Postgres
+
+Provision Postgres 10 and set up your initial table schema and function:
+
+```
+export CONNECTION_STRING=""
+docker run-ti postgres:10 pql ${CONNECTION_STRING}
+```
+
+Copy/paste from [schema-1.0.sql](sql/schema-1.0.sql)
+
+* Test the JSON function:
+
+http://127.0.0.1:8080/function/alexellis-leaderboard
+
+* Test the Vue.js page:
+
+http://alexellis.local-o6s.io:8081/leaderboard-page
 
 ## Contributing & license
 

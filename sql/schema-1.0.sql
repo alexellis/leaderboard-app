@@ -1,9 +1,15 @@
+
+drop table activity cascade;
+drop table users;
+
 CREATE TABLE users (
     user_id         integer PRIMARY KEY NOT NULL,
     user_login      text NOT NULL,
     track           BOOLEAN NOT NULL,
     created_at      timestamp not null
 );
+insert into users (user_id,user_login,track, created_at) values (653013,'alexellisuk',true,now());
+insert into users (user_id,user_login,track, created_at) values (103022,'rgee0',true,now());
 
 CREATE TABLE activity (
     id              INT GENERATED ALWAYS AS IDENTITY,
@@ -14,7 +20,20 @@ CREATE TABLE activity (
     repo            text NOT NULL
 );
 
-CREATE FUNCTION get_leaderboard()
+insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,653013,'issue_created','2019-02-13 07:44:00','openfaas','org-tester');
+insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,653013,'issue_comment','2019-02-13 07:44:05','openfaas','org-tester');
+insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,653013,'issue_comment','2019-02-12 07:44:05','openfaas','org-tester');
+insert into activity (id,user_id,activity_type,activity_date,owner,repo) values (DEFAULT,103022,'issue_comment','2019-02-12 07:44:05','openfaas','org-tester');
+
+select * from activity order by activity_date  asc; 
+
+select a.user_id, a.activity_type, count(a.id) from activity as a
+where a.activity_date <= now()
+group by (a.user_id, a.activity_type) ;
+
+drop function get_leaderboard;
+
+CREATE or REPLACE FUNCTION get_leaderboard()
     RETURNS TABLE(user_id integer, user_login text, issue_comments bigint, issues_created bigint)
   AS
 $$
@@ -46,3 +65,5 @@ group by a.user_id, u.user_login
 order by issue_comments desc, issues_created desc;
 END
 $$  LANGUAGE 'plpgsql' VOLATILE;
+
+select * from get_leaderboard();
