@@ -6,6 +6,8 @@ functions:
     lang: golang-middleware
     handler: ./leaderboard
     image: leaderboard:1.1.0
+    labels:
+      com.openfaas.scale.zero: false
     environment:
       postgres_db: defaultdb
       postgres_sslmode: require
@@ -17,6 +19,8 @@ functions:
     lang: golang-middleware
     handler: ./github-sub
     image: github-sub:1.1.0
+    labels:
+      com.openfaas.scale.zero: false
     environment:
       postgres_db: defaultdb
       postgres_sslmode: require
@@ -29,3 +33,5 @@ functions:
     lang: node8-express
     handler: ./leaderboard-page
     image: leaderboard-page:1.1.0
+    labels:
+      com.openfaas.scale.zero: false
