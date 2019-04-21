@@ -19,6 +19,12 @@ Subscribe to events by adding a webhook to the github-sub function:
 
 ![Subscribe](docs/subscribe.png)
 
+## Blog post / tutorial
+
+Read all the details here on how to build a portable Serverless Single Page App for any cloud:
+
+See also: [Blog: How to build a Serverless Single Page App](https://www.openfaas.com/blog/serverless-single-page-app/)
+
 ## Functions
 
 * github-sub
