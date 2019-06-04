@@ -43,6 +43,19 @@ Renders the leaderboard itself as a Vue.js app by Ken Fukuyama
 
 * [schema-1.0.sql](sql/schema-1.0.sql)
 
+## Secrets
+
+You can seal your secrets for use with OpenFaaS Cloud:
+
+```
+faas-cli cloud seal \
+  --name teamserverless-leaderboard-app-secrets \
+  --literal=password="$PASS" \
+  --literal=username="$USER" \
+  --literal=host="$HOST" \
+  --literal=webhook-secret="${WEBHOOK}"
+```
+
 ## Running locally
 
 * Deploy OpenFaaS
@@ -65,7 +78,7 @@ export HOST=""
 export WEBHOOK="secret"   # As set on the webhook page on GitHub
 
 # Kubernetes
-faas-cli secret create leaderboard-app-secrets-password
+faas-cli secret create leaderboard-app-secrets-password \
   --from-literal=password="$PASS" \
   --from-literal=username="$USER" \
   --from-literal=host="$HOST" \
@@ -129,7 +142,7 @@ Provision Postgres 10 and set up your initial table schema and function:
 
 ```
 export CONNECTION_STRING=""
-docker run-ti postgres:10 pql ${CONNECTION_STRING}
+docker run -ti postgres:10 psql ${CONNECTION_STRING}
 ```
 
 Copy/paste from [schema-1.0.sql](sql/schema-1.0.sql)
