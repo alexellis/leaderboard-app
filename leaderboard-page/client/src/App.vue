@@ -19,11 +19,12 @@
               <v-data-table :rows-per-page-items="[50, 100, 150]"
                             :headers="headers"
                             :items="items"
+                            :pagination.sync="pagination"
                             class="elevation-1">
                 <template slot="items"
                           slot-scope="props">
                   <td class="text-xs-center">
-                    {{ props.index + 1}}
+                    {{ (pagination.page - 1)* pagination.rowsPerPage + props.index + 1}}
                   </td>
                   <td class="text-xs-center">
                     <v-avatar slot="activator"
@@ -56,6 +57,9 @@ export default {
   components: {},
   data() {
     return {
+      pagination: {
+        sortBy: 'IssueComments'
+      },
       headers: [
         {
           text: "",
@@ -70,7 +74,7 @@ export default {
         {
           text: "Login",
           value: "UserLogin",
-          align: "ceenter"
+          align: "center"
         },
         {
           text: "issue Comments",
