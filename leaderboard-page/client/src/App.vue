@@ -23,6 +23,9 @@
                 <template slot="items"
                           slot-scope="props">
                   <td class="text-xs-center">
+                    {{ props.index + 1}}
+                  </td>
+                  <td class="text-xs-center">
                     <v-avatar slot="activator"
                               size="36px">
                       <img :src="`https://avatars.githubusercontent.com/${props.item.UserLogin}`"
@@ -56,19 +59,28 @@ export default {
       headers: [
         {
           text: "",
-          value: ""
+          value: "",
+          align: "center",
+        },
+        {
+          text: "",
+          value: "",
+          sortable: false
         },
         {
           text: "Login",
-          value: "UserLogin"
+          value: "UserLogin",
+          align: "ceenter"
         },
         {
           text: "issue Comments",
-          value: "IssueComments"
+          value: "IssueComments",
+          align: "right"
         },
         {
           text: "issues opened",
-          value: "IssuesCreated"
+          value: "IssuesCreated",
+          align: "right"
         }
       ],
       items: []
