@@ -106,9 +106,9 @@ leaderboard-page => alexellis-leaderboard-page
 
 Then add a prefix for each function's Docker image name and run `faas-cli build -f local.yml`
 
-* Deploy `of-router`:
+* Deploy `edge-router`:
 
-Via: https://github.com/openfaas/openfaas-cloud/tree/master/router
+Via: https://github.com/openfaas/openfaas-cloud/tree/master/edge-router
 
 Deploy a fake auth function:
 
