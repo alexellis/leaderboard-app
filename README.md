@@ -66,7 +66,7 @@ The quickest/easiest option is to use Swarm.
 
 ```
 faas-cli template store pull node8-express
-faas-cli template store pull golang-middlware
+faas-cli template store pull golang-middleware
 ```
 
 * Create the required secrets
