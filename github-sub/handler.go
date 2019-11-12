@@ -2,10 +2,12 @@ package function
 
 import (
 	"database/sql"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/google/go-github/github"
 	_ "github.com/lib/pq"
@@ -53,6 +55,8 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	dbErr := db.Ping()
 	if dbErr != nil {
 		w.WriteHeader(http.StatusOK)
+		log.Printf("Error performing ping: %s\n", dbErr)
+
 		http.Error(w, dbErr.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -63,16 +67,20 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 
 		webhookSecret, webhookSecretErr := sdk.ReadSecret("webhook-secret")
 		if webhookSecretErr != nil {
-			log.Printf("Webhook secret error: %s", webhookSecretErr.Error())
+			wrappedErr := errors.Wrap(webhookSecretErr, "unable to read secret")
+			log.Printf("%s\n", wrappedErr)
+			http.Error(w, wrappedErr.Error(), http.StatusBadRequest)
+			return
 		}
 
 		// Validate using HMAC that the incoming request is signed by GitHub using the
 		// symmetric key.
 		invalid := github.ValidateSignature(r.Header.Get("X-Hub-Signature"), body, []byte(webhookSecret))
 		if invalid != nil {
-			resErr := errors.Wrap(invalid, "signature was invalid")
-			log.Printf("%s\n", resErr.Error())
-			http.Error(w, resErr.Error(), http.StatusBadRequest)
+
+			wrappedErr := errors.Wrap(invalid, "signature was invalid")
+			log.Printf("%s\n", wrappedErr.Error())
+			http.Error(w, wrappedErr.Error(), http.StatusBadRequest)
 
 			return
 		}
@@ -87,23 +95,31 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 
 	// Only two event types are supported for logging
 	msg := ""
+
 	if issueEvent, ok := event.(*github.IssuesEvent); ok {
 		switch *issueEvent.Action {
 		case "opened":
+
 			login := issueEvent.Sender.GetLogin()
 			id := issueEvent.Sender.GetID()
 			msg = " (issue opened) by " + login
 			owner := *issueEvent.Repo.GetOwner().Login
 			repo := issueEvent.Repo.GetName()
 			activityType := "issue_created"
+
 			insertErr := insertUser(login, id, true)
+
 			if insertErr != nil {
-				log.Printf("%s\n", insertErr.Error())
+				if !isRowConflict(insertErr.Error()) {
+					log.Printf("%s\n", insertErr.Error())
+				}
 			}
 
 			activityErr := insertActivity(id, activityType, owner, repo)
 			if activityErr != nil {
-				log.Printf("%s\n", activityErr.Error())
+				if !isRowConflict(activityErr.Error()) {
+					log.Printf("%s\n", activityErr.Error())
+				}
 			}
 		}
 	}
@@ -122,19 +138,24 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 			insertErr := insertUser(login, id, true)
 
 			if insertErr != nil {
-				log.Printf("%s\n", insertErr.Error())
+				if !isRowConflict(insertErr.Error()) {
+					log.Printf("%s\n", insertErr.Error())
+				}
 			}
 
 			activityErr := insertActivity(id, activityType, owner, repo)
+
 			if activityErr != nil {
-				log.Printf("%s\n", activityErr.Error())
+				if !isRowConflict(activityErr.Error()) {
+					log.Printf("%s\n", activityErr.Error())
+				}
 			}
 		}
 	}
 
 	w.WriteHeader(http.StatusOK)
 	// This message will appear on your GitHub webhook audit page
-	w.Write([]byte("Ping OK" + msg))
+	w.Write([]byte(fmt.Sprintf("Ping OK %s", msg)))
 }
 
 // insertUser will insert a user, or fail if the row already exists, this could be
@@ -159,4 +180,8 @@ func insertActivity(loginID int64, activityType, owner, repo string) error {
 	}
 
 	return err
+}
+
+func isRowConflict(err string) bool {
+	return strings.Contains(err, "duplicate key value violates unique constraint")
 }
