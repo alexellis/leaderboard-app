@@ -14,6 +14,7 @@ import (
 )
 
 var db *sql.DB
+var cors string
 
 // init establishes a persistent connection to the remote database
 // the function will panic if it cannot establish a link and the
@@ -40,6 +41,10 @@ func init() {
 	if err != nil {
 		panic(err.Error())
 	}
+
+	if val, ok := os.LookupEnv("allow_cors"); ok && len(val) > 0 {
+		cors = val
+	}
 }
 
 // Handle a HTTP request as a middleware processor.
@@ -65,8 +70,13 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		results = append(results, result)
 	}
 
+	if len(cors) > 0 {
+		w.Header().Set("Access-Control-Allow-Origin", cors)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+
 	res, _ := json.Marshal(results)
 	w.Write(res)
 }

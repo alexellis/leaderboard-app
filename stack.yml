@@ -12,6 +12,7 @@ functions:
       postgres_db: defaultdb
       postgres_sslmode: require
       postgres_port: 25060
+      allow_cors: https://alexellis.github.io
     secrets:
       - leaderboard-app-secrets
 
@@ -30,7 +31,7 @@ functions:
       - leaderboard-app-secrets
 
   leaderboard-page:
-    lang: node8-express
+    lang: node10-express
     handler: ./leaderboard-page
     image: leaderboard-page:1.1.0
     labels:
